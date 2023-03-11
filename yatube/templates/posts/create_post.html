@@ -1,0 +1,39 @@
+
+{% extends 'base.html' %} 
+
+
+{% block title %}
+  {% if form.instance.pk %}Редактирование записи{% else %}Создание записа{% endif %}
+{% endblock %}
+
+{% block content %}
+      <div class="container py-5">
+        <div class="row justify-content-center">
+          <div class="col-md-8 p-5">
+            <div class="card">
+              <div class="card-header">       
+                {% if form.instance.pk %}Редактировать запись{% else %}Добавить запись{% endif %}          
+              </div>
+              <div class="card-body">                  
+                {% load user_filters %}
+                {% include 'includes/field_errors.html' %}  
+                {% if form.instance.pk %}
+                  <form action="{% url 'posts:post_edit' form.instance.pk %}" method="post" enctype="multipart/form-data">
+                {% else %}
+                  <form action="{% url 'posts:post_create' %}" method="post" enctype="multipart/form-data">
+                {% endif %}
+                  {% csrf_token %}
+                  {% include 'includes/cycle_form.html' %}
+                  <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary"> 
+                      {% if form.instance.pk %}Сохранить{% else %}Добавить{% endif %} 
+                    </button>
+                  </div>
+                </form>               
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+{% endblock %}    
+

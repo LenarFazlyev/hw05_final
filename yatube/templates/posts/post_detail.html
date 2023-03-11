@@ -1,0 +1,56 @@
+{% extends 'base.html' %} 
+
+{% load thumbnail %}
+{% block title %}
+  {{ post.text|truncatechars:30 }}
+{% endblock %}
+
+{% block content %}
+      <div class="row">
+        <aside class="col-12 col-md-3">
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              Дата публикации: {{ post.pub_date|date:"d E Y" }}
+            </li>
+            <li class="list-group-item">
+              {% if post.group %}              
+                Группа: <!-- Название группы -->{{post.group}}
+                <a href={% url 'posts:group_posts' post.group.slug %}>
+                  все записи группы 
+                </a>              
+              {% else %}
+                <span style='color: red'>Этой публикации нет ни в одном сообществе.</span>
+              {% endif %}
+            </li>
+            <li class="list-group-item">
+              Автор: {{ post.author.get_full_name }}
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Всего постов автора:  <span >{{post.author.posts.count}}</span>
+            </li>
+            <li class="list-group-item">
+              <a href="{% url 'posts:profile' post.author %}">
+                все посты пользователя
+              </a>
+            </li>
+          </ul>
+          
+        </aside>
+        <article class="col-12 col-md-9">
+          {% thumbnail post.image "600x339" crop="center" upscale=True as im %}
+            <img class="card-img my-2" src="{{ im.url }}">
+          {% endthumbnail %}
+          <p>
+            {{ post.text|linebreaks }}
+            {% if user.id == post.author.id %}
+              <a class="btn btn-primary"  
+                href="{% url 'posts:post_edit' post.pk %}"
+              >
+                Редактировать запись
+              </a>
+            {% endif %}
+          </p>
+          {% include 'posts/includes/add_post.html' %}
+        </article>
+      </div> 
+{% endblock %} 
