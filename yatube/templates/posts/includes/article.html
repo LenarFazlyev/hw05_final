@@ -4,7 +4,8 @@
     <li>
       Автор: {{ post.author.get_full_name }}
       {% if not show_author %}
-        <a href={% url 'posts:profile' post.author %}>все посты пользователя</a>
+        {% comment %} тогда и здесь кавычки добавлю. Потом удалю. {% endcomment %}
+        <a href="{% url 'posts:profile' post.author %}">все посты пользователя</a>
       {% endif %}
     </li>
     <li>
@@ -15,11 +16,11 @@
   {% thumbnail post.image "500x339" crop="center" upscale=True as im %}
     <img class="card-img my-2" src="{{ im.url }}">
   {% endthumbnail %}
-  <a href={% url 'posts:post_detail' post.pk %} >подробная информация </a></br> 
+  <a href="{% url 'posts:post_detail' post.pk %}" >подробная информация </a></br> 
   {% if not show_group %}
     {% if post.group %}
         Группа {{ post.group }}:
-        <a href={% url 'posts:group_posts' post.group.slug %}>все записи группы</a>
+        <a href="{% url 'posts:group_posts' post.group.slug %}">все записи группы</a>
     {% else %}
         <span style='color: red'>Этой публикации нет ни в одном сообществе.</span>          
     {% endif %} 

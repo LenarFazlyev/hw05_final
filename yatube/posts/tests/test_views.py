@@ -9,7 +9,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from posts.forms import PostForm
-from posts.models import Group, Post, User
+from posts.models import Follow, Group, Post, User
 
 SHIFT_POST = 3
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
@@ -161,6 +161,7 @@ class PaginatorViewsTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.author = User.objects.create_user(username='author')
         cls.auth = User.objects.create_user(username='auth')
         cls.group = Group.objects.create(
             title='Тестовая группа',
@@ -172,7 +173,7 @@ class PaginatorViewsTest(TestCase):
         posts: list = []
         for _ in range(batch_size):
             posts.append(Post(
-                author=cls.auth,
+                author=cls.author,
                 text='Тестовый пост kjljf;sakdj;fskaj;flkjasd;klfjs;l',
                 group=cls.group,
             ))
@@ -187,11 +188,17 @@ class PaginatorViewsTest(TestCase):
         names_args: tuple = (
             ('posts:index', None, ),
             ('posts:group_posts', (self.group.slug,), ),
-            ('posts:profile', (self.auth,), ),
+            ('posts:profile', (self.author,), ),
+            ('posts:follow_index', None, ),
         )
         pages: tuple = (
             ('?page=1', settings.LIMITS_IN_PAGE),
             ('?page=2', SHIFT_POST),
+        )
+
+        Follow.objects.create(
+            user=self.auth,
+            author=self.author
         )
 
         for name, args in names_args:

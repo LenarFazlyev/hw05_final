@@ -3,7 +3,7 @@ from http import HTTPStatus
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from posts.models import Group, Post, User
+from posts.models import Comment, Group, Post, User
 
 
 class PostURLTests(TestCase):
@@ -20,8 +20,12 @@ class PostURLTests(TestCase):
             author=cls.author,
             text='Тестовый пост kjljf;sakdj;fskaj;flkjasd;klfjs;l',
         )
-
         cls.auth = User.objects.create_user(username='auth')
+        cls.comment = Comment.objects.create(
+            post=cls.post,
+            author=cls.author,
+            text='Testing comment made by author'
+        )
 
     def setUp(self):
         self.author_client = Client()
@@ -44,6 +48,22 @@ class PostURLTests(TestCase):
              (self.post.pk,),
              f'/posts/{self.post.pk}/edit/'
              ),
+            ('posts:add_comment',
+             (self.post.pk,),
+             f'/posts/{self.post.pk}/comment/'
+             ),
+            ('posts:follow_index',
+             None,
+             '/follow/'
+             ),
+            ('posts:profile_follow',
+             (self.author,),
+             f'/profile/{self.author}/follow/'
+             ),
+            ('posts:profile_unfollow',
+             (self.author,),
+             f'/profile/{self.author}/unfollow/'
+             ),
         )
 
     def test_pages_use_correct_templates(self):
@@ -55,6 +75,7 @@ class PostURLTests(TestCase):
             ('posts:post_detail', (self.post.pk,), 'posts/post_detail.html'),
             ('posts:post_create', None, 'posts/create_post.html'),
             ('posts:post_edit', (self.post.pk,), 'posts/create_post.html'),
+            ('posts:follow_index', None, 'posts/follow.html'),
         )
         for namespace, args, template in templates:
             with self.subTest(template=template):
@@ -80,18 +101,45 @@ class PostURLTests(TestCase):
         for namespace, args, _ in self.urls:
             with self.subTest(url=_):
                 response = self.author_client.get(
-                    reverse(namespace, args=args)
+                    reverse(namespace, args=args),
                 )
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                if namespace == 'posts:add_comment':
+                    reverse_name = reverse(
+                        'posts:post_detail', args=(self.post.pk,)
+                    )
+                    self.assertRedirects(
+                        response, (f'{reverse_name}')
+                    )
+                elif namespace == 'posts:profile_follow':
+                    reverse_name = reverse(
+                        'posts:profile', args=(self.author,)
+                    )
+                    self.assertRedirects(
+                        response, (f'{reverse_name}')
+                    )
+                elif namespace == 'posts:profile_unfollow':
+                    self.assertEqual(
+                        response.status_code,
+                        HTTPStatus.NOT_FOUND
+                    )
+                else:
+                    self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_urls_for_auth(self):
         """Тестирование урлов авторизованного пользователя"""
         for namespace, args, _ in self.urls:
             with self.subTest(namespace=namespace):
                 response = self.auth_client.get(reverse(namespace, args=args))
-                if namespace == 'posts:post_edit':
+                if (namespace == 'posts:post_edit'
+                        or namespace == 'posts:add_comment'):
                     url_from_reverse = reverse(
                         'posts:post_detail', args=(self.post.pk,)
+                    )
+                    self.assertRedirects(response, url_from_reverse)
+                elif (namespace == 'posts:profile_follow'
+                        or namespace == 'posts:profile_unfollow'):
+                    url_from_reverse = reverse(
+                        'posts:profile', args=(self.author,)
                     )
                     self.assertRedirects(response, url_from_reverse)
                 else:
@@ -99,12 +147,19 @@ class PostURLTests(TestCase):
 
     def test_urls_for_not_auth(self):
         """Тестирование урлов неавторизированного пользователя"""
-        edit_or_create: list = ['posts:post_create', 'posts:post_edit']
+        edit_or_create: list = [
+            'posts:post_create',
+            'posts:post_edit',
+            'posts:add_comment',
+            'posts:follow_index',
+            'posts:profile_follow',
+            'posts:profile_unfollow',
+        ]
 
         for namespace, args, _ in self.urls:
             with self.subTest(namespace=namespace):
                 response = self.client.get(
-                    reverse(namespace, args=args), follow=True
+                    reverse(namespace, args=args),
                 )
                 if namespace in edit_or_create:
                     reverse_login = reverse('users:login')

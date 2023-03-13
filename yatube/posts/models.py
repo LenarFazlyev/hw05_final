@@ -100,3 +100,10 @@ class Follow(models.Model):
         verbose_name='Автор поста',
         on_delete=models.CASCADE,
     )
+
+    class Meta:
+        verbose_name = 'Подписки'
+        verbose_name_plural = 'Подписки'
+
+    def __str__(self):
+        return f'{self.user} подписан на {self.author}'
