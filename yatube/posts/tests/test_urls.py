@@ -108,14 +108,14 @@ class PostURLTests(TestCase):
                         'posts:post_detail', args=(self.post.pk,)
                     )
                     self.assertRedirects(
-                        response, (f'{reverse_name}')
+                        response, reverse_name
                     )
                 elif namespace == 'posts:profile_follow':
                     reverse_name = reverse(
                         'posts:profile', args=(self.author,)
                     )
                     self.assertRedirects(
-                        response, (f'{reverse_name}')
+                        response, reverse_name
                     )
                 elif namespace == 'posts:profile_unfollow':
                     self.assertEqual(
@@ -130,14 +130,15 @@ class PostURLTests(TestCase):
         for namespace, args, _ in self.urls:
             with self.subTest(namespace=namespace):
                 response = self.auth_client.get(reverse(namespace, args=args))
-                if (namespace == 'posts:post_edit'
-                        or namespace == 'posts:add_comment'):
+                if namespace in ['posts:post_edit', 'posts:add_comment']:
                     url_from_reverse = reverse(
                         'posts:post_detail', args=(self.post.pk,)
                     )
                     self.assertRedirects(response, url_from_reverse)
-                elif (namespace == 'posts:profile_follow'
-                        or namespace == 'posts:profile_unfollow'):
+                elif namespace in [
+                    'posts:profile_follow',
+                    'posts:profile_unfollow',
+                ]:
                     url_from_reverse = reverse(
                         'posts:profile', args=(self.author,)
                     )

@@ -34,7 +34,6 @@ def profile(request, username):
     following = (
         request.user.is_authenticated
         and author != request.user
-        # and Follow.objects.filter(user=request.user, author=author).exists()
         and author.following.filter(user=request.user).exists()
     )
     context = {
@@ -46,16 +45,16 @@ def profile(request, username):
 
 
 def post_detail(request, post_id):
-    # post = get_object_or_404(Post, pk=post_id)
-    # post = Post.objects.prefetch_related('comments__author').get(pk=post_id)
     post = get_object_or_404(
-        Post.objects.prefetch_related('comments__author'), pk=post_id
+        Post.objects.select_related(
+            'author'
+        ).prefetch_related('comments__author'), pk=post_id
     )
     form = CommentForm(request.POST or None)
     context = {
         'post': post,
         'form': form,
-        "comments": post.comments.all()
+        'comments': post.comments.all()
     }
     return render(request, 'posts/post_detail.html', context)
 
@@ -131,7 +130,6 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    # author = get_object_or_404(User, username=username)
     get_object_or_404(
         Follow,
         user=request.user,

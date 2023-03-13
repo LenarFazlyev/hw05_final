@@ -117,7 +117,7 @@ class PostCreateAndEditFormsTests(TestCase):
         self.assertEqual(
             post.text, form_data['text']
         )  # текст
-        self.assertEqual(post.image, f"posts/{form_data['image']}")
+        self.assertEqual(post.image, f'posts/{form_data["image"]}')
 
     def test_create_post_not_authorized(self):
         """Тестирование невозможности создания поста гостем"""
@@ -266,10 +266,6 @@ class FollowTestCase(TestCase):
         )
         after_follows = Follow.objects.count()
         self.assertEqual(after_follows, initial_follows + 1)
-        # self.assertTrue(Follow.objects.filter(
-        #     user=self.auth,
-        #     author=self.author
-        # ).exists())
         followers = Follow.objects.last()
         self.assertEqual(followers.author, self.author)
         self.assertEqual(followers.user, self.auth)
@@ -319,7 +315,7 @@ class FollowTestCase(TestCase):
             reverse('posts:profile_follow', args=(self.author,))
         )
         follower_count_first = Follow.objects.count()
-        self.assertEqual(follower_count, follower_count_first - 1)
+        self.assertEqual(follower_count + 1, follower_count_first)
         self.auth_client.get(
             reverse('posts:profile_follow', args=(self.author,))
         )
